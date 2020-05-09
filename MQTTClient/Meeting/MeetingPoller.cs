@@ -1,22 +1,27 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace MQTTClient.Meeting
 {
-    public abstract class MeetingPoller:IMeetingPoller,IDisposable
+    public abstract class MeetingPoller:IMeetingPoller
     {
-        public string ApplicationName { get; private set; }
-        public State State { get; protected set; }
-        public int PollingFrequency{get; set; }
-        
-        protected ILogger _logger;
+        #region Public Properties
 
-        // Private, not shared
+        public IMeetingApplication MeetingApplication { get; }
+        public IMeetingDetails MeetingDetails { get;}
+        public int PollingFrequency{get;} 
+        #endregion
+
+        #region Private Properties
         private CancellationTokenSource _cancellationTokenSource;
         private CancellationToken _token;
         private Task _task;
+        #endregion
+
+        protected ILogger _logger;
 
         /// <summary>
         /// Polls for Meeting Status
@@ -25,26 +30,26 @@ namespace MQTTClient.Meeting
         /// <param name="applicationName"></param>
         /// <param name="pollingFrequeny"></param>
         /// <param name="initialMeetingState"></param>
-        protected MeetingPoller(ILogger logger,
-            string applicationName,
-            int pollingFrequeny,
-            State initialMeetingState)
+        protected MeetingPoller(ILogger logger, string applicationName, int pollingFrequeny, State initialMeetingState)
         {
-            ApplicationName = applicationName;
+            MeetingApplication = new MeetingApplication(applicationName, IsInstalled());
             PollingFrequency = pollingFrequeny;
-            State = initialMeetingState;
+            MeetingDetails = new MeetingDetails()
+            {
+                State = initialMeetingState
+            };
             
             _cancellationTokenSource = new CancellationTokenSource();
+            _token = _cancellationTokenSource.Token;
             _logger = logger;
-
-            if (!CheckIsInstalled())
+            
+            if (!MeetingApplication.IsInstalled)
             {
-                _logger.LogError($"{ApplicationName} is not installed. Halting poller.");
+                _logger.LogError($"{MeetingApplication.ApplicationName} is not installed. Halting poller.");
                 return;
             }
-            _logger.LogInformation($"Starting {ApplicationName} polling");
-            
-            _token = _cancellationTokenSource.Token;
+
+            _logger.LogInformation($"Starting {MeetingApplication.ApplicationName} polling");
 
             _task = Task.Run(async () =>
             {
@@ -52,7 +57,7 @@ namespace MQTTClient.Meeting
                 {
                     if (!CheckIsRunning())
                     {
-                        _logger.LogDebug($"{ApplicationName} is not running. Will continue to poll");
+                        _logger.LogDebug($"{MeetingApplication.ApplicationName} is not running. Will continue to poll");
                     }
                     else
                     {
@@ -62,16 +67,17 @@ namespace MQTTClient.Meeting
                     await Task.Delay(pollingFrequeny, _token);
                 }
             }, _token);
+            _logger.LogInformation($"Started");
         }
         
         protected abstract void SetState();
-        protected abstract bool CheckIsInstalled();
+        protected abstract bool IsInstalled();
         protected abstract bool CheckIsRunning();
 
         public void Dispose()
         {
             _cancellationTokenSource.Cancel();
-            _logger.LogInformation($"Stopping {ApplicationName} polling");
+            _logger.LogInformation($"Stopping {MeetingApplication.ApplicationName} polling");
         }
     }
 }

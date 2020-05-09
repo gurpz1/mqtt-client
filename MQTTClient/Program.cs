@@ -27,8 +27,6 @@ namespace MQTTClient
                 var logger = services.GetService<ILogger<Program>>();
                 logger.LogDebug("Application Launching...");
 
-                var x = services.GetService<MqttPublisher>();
-
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
@@ -62,9 +60,9 @@ namespace MQTTClient
             serviceCollection.AddScoped<MQTTClientContext>();
             
             // Initialise MQTT Stuff
-            serviceCollection.AddScoped<MqttPublisher>();
+            serviceCollection.AddScoped<PublisherFacade>();
             
-            // Initialise meeting apps
+            // Initialise Meeting Applications
             serviceCollection.AddSingleton<Webex>();
             serviceCollection.AddSingleton<SkypeForBusiness>();
             

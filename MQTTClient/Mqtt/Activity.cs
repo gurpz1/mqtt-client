@@ -1,7 +1,7 @@
 ﻿namespace MQTTClient.Mqtt
 {
-    public class MqttMessageBuilder
+    public enum Activity
     {
-        
+        Meeting
     }
 }

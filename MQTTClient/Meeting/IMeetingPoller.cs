@@ -1,8 +1,11 @@
-﻿namespace MQTTClient.Meeting
+﻿using System;
+
+namespace MQTTClient.Meeting
 {
-    public interface IMeetingPoller
+    public interface IMeetingPoller:IDisposable
     {
-        string ApplicationName { get; }
-        State State { get; }
+        IMeetingApplication MeetingApplication { get; }
+        IMeetingDetails MeetingDetails { get; }
+        int PollingFrequency { get; }
     }
 }

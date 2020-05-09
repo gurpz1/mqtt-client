@@ -11,19 +11,19 @@ using MQTTnet.Protocol;
 
 namespace MQTTClient.Mqtt
 {
-    public class MqttPublisher
+    public class PublisherFacade
     {
         private IManagedMqttClient _managedPublisher;
-        private ILogger<MqttPublisher> _logger;
+        private IManagedMqttClientOptions _clientOptions;
+        private ILogger<PublisherFacade> _logger;
         private IConnectionSettings _connectionSettings;
 
-        public MqttPublisher(ILogger<MqttPublisher> logger, IOptions<ConnectionSettings> connectionSettings)
+        public PublisherFacade(ILogger<PublisherFacade> logger, IOptions<ConnectionSettings> connectionSettings)
         {
             _connectionSettings = connectionSettings.Value;
             _logger = logger;
-
-
-            var options = new ManagedMqttClientOptionsBuilder()
+            
+            _clientOptions = new ManagedMqttClientOptionsBuilder()
                 .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
                 .WithClientOptions(new MqttClientOptionsBuilder()
                     .WithClientId(_connectionSettings.ClientID)
@@ -34,6 +34,8 @@ namespace MQTTClient.Mqtt
                 ).Build();
             
             _managedPublisher= new MqttFactory().CreateManagedMqttClient();
+            
+            // Register base events
             _managedPublisher.ConnectedHandler = new MqttClientConnectedHandlerDelegate(a =>
             {
                 _logger.LogInformation($"Connected to {_connectionSettings.BrokerURL}");
@@ -42,16 +44,30 @@ namespace MQTTClient.Mqtt
             {
                 _logger.LogInformation($"Disconnected to {_connectionSettings.BrokerURL}");
             });
-            
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("cmnd/IOT_7E7DBC/POWER2")
-                .WithPayload(Encoding.UTF8.GetBytes("ON"))
-                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-                .Build();
-            _managedPublisher.StartAsync(options);
+            _managedPublisher.ConnectingFailedHandler = new ConnectingFailedHandlerDelegate(a =>
+            {
+                _logger.LogWarning($"Connection to {_connectionSettings.BrokerURL} failed.");
+            });
+        }
 
+        public void Connect()
+        {
+            _managedPublisher.StartAsync(_clientOptions);
+        }
+
+        public void Disconnect()
+        {
+            _managedPublisher.StopAsync();
+        }
+
+        public void SendMessage(MqttApplicationMessage message)
+        {
+            // var message = new MqttApplicationMessageBuilder()
+            //     .WithTopic("stat/hello/world")
+            //     .WithPayload(Encoding.UTF8.GetBytes("FREE"))
+            //     .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            //     .Build();
             _managedPublisher.PublishAsync(message);
-
         }
     }
 }

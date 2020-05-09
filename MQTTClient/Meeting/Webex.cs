@@ -21,28 +21,29 @@ namespace MQTTClient.Meeting
             if (pnames.Length > 1)
             {
                 _logger.LogDebug("In a meeting.");
-                State =  State.IN_PROGRESS;
+                MeetingDetails.State =  State.IN_PROGRESS;
             }
             else
             {
                 _logger.LogDebug("Not in a meeting");
-                State = State.FREE;   
+                MeetingDetails.State = State.FREE;   
             }
         }
 
-        protected override bool CheckIsInstalled()
+        protected override bool IsInstalled()
         {
-            string registryPath = @"Software\WebEx\Uninstall\Online";
+            string registryPath = @"Software\WebEx\Config";
             try
             {
                 RegistryKey path = Registry.CurrentUser.OpenSubKey(registryPath);
-                string value =(string) path.GetValue("Meetings");
-                return value == "Installed";
+                var value = path.GetValue("IsRecordAudio");
             }
             catch
             {
                 return false;
             }
+
+            return true;
         }
 
         protected override bool CheckIsRunning()

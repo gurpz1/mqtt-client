@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTClient.Meeting;
+using MQTTClient.Mqtt;
 
 namespace MQTTClient
 {
@@ -15,9 +16,10 @@ namespace MQTTClient
         private ILogger _logger;
         private IConnectionSettings _connectionSettings;
         
-        // Meeting apps
+        #region Supported Meeting Apps
         private Webex _webex;
         private SkypeForBusiness _skypeForBusiness;
+        #endregion
 
         public MQTTClientContext(ILogger<MQTTClientContext> logger, 
             IOptions<ConnectionSettings> connectionSettings,
@@ -52,8 +54,8 @@ namespace MQTTClient
         private void ShowLaunchBaloon()
         {
             _trayIcon.BalloonTipIcon= ToolTipIcon.Info;
-            _trayIcon.BalloonTipText = $"Connecting to {_connectionSettings.BrokerURL}";
-            _trayIcon.BalloonTipTitle = "MQTT Client";
+            _trayIcon.BalloonTipText = "Starting up Sagoo Status Notifier.";
+            _trayIcon.BalloonTipTitle = "MQTTClient";
             _trayIcon.ShowBalloonTip(1500);
 
         }
