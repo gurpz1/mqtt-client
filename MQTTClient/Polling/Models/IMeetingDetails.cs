@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 
-namespace MQTTClient.Meeting
+namespace MQTTClient.Polling.Models
 {
     public interface IMeetingDetails:INotifyPropertyChanged
     {
-        State State { get; set; }
+        MeetingState MeetingState { get; set; }
     }
 }

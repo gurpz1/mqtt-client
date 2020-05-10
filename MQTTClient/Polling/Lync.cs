@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Lync.Model;
 using Microsoft.Win32;
+using MQTTClient.Config;
+using MQTTClient.Polling.Models;
 
-namespace MQTTClient.Meeting
+namespace MQTTClient.Polling
 {
-    public class SkypeForBusiness : MeetingPoller
+    public class Lync : MeetingApplicationPoller
     {
         private LyncClient _lyncClient;
         
-        public SkypeForBusiness(ILogger<SkypeForBusiness> logger, int pollingFrequeny = 1500)
-            : base(logger, "SkypeForBusiness", pollingFrequeny, State.FREE)
+        public Lync(ILogger<Lync> logger,
+            IOptions<Dictionary<string,MeetingApplicationSettings>> configuration)
+            : base(logger, "Lync", configuration.Value["Lync"].PollingFrequencySeconds, MeetingState.FREE)
         {
         }
 
@@ -25,9 +28,9 @@ namespace MQTTClient.Meeting
                 _logger.LogDebug($"User is {activity}");
                 if(activity.ToString() == "In a call")
                 {
-                    MeetingDetails.State = State.IN_PROGRESS;
+                    MeetingDetails.MeetingState = MeetingState.BUSY;
                 }
-                MeetingDetails.State = State.FREE;
+                MeetingDetails.MeetingState = MeetingState.FREE;
             }
         }
 
@@ -35,8 +38,10 @@ namespace MQTTClient.Meeting
         {
             IDictionary<string,string> _lyncVersions = new Dictionary<string, string>()
             {
+                {@"SOFTWARE\Microsoft\Office\16.0\Registration\{03CA3B9A-0869-4749-8988-3CBC9D9F51BB}", "x64 Skype for Business 2016"},
                 {@"SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Registration\{03CA3B9A-0869-4749-8988-3CBC9D9F51BB}","x86 Skype for Business 2016" },
-                {@"SOFTWARE\Microsoft\Office\16.0\Registration\{03CA3B9A-0869-4749-8988-3CBC9D9F51BB}", "x64 Skype for Business 2016"}
+                {@"SOFTWARE\Microsoft\Office\15.0\Registration\{0EA305CE-B708-4D79-8087-D636AB0F1A4D}", "x86 Microsoft Lync 2013"},
+                {@"SOFTWARE\Wow6432Node\Microsoft\Office\15.0\Registration\{0EA305CE-B708-4D79-8087-D636AB0F1A4D}", "x64 Microsoft Lync 2013"}
             };
             foreach (var lyncVersion in _lyncVersions)
             {

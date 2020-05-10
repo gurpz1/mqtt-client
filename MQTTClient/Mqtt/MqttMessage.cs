@@ -2,10 +2,14 @@
 {
     public abstract class MqttMessage
     {
+        public abstract string Topic { get; }
         public Activity Activity { get; }
-        public MqttMessage(Activity activity)
+        protected string _clientId;
+
+        public MqttMessage(Activity activity, string clientId)
         {
             Activity = activity;
+            _clientId = clientId;
         }
     }
 }

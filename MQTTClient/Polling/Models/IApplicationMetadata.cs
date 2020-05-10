@@ -1,6 +1,6 @@
-﻿namespace MQTTClient.Meeting
+﻿namespace MQTTClient.Polling.Models
 {
-    public interface IMeetingApplication
+    public interface IApplicationMetadata
     {
         string ApplicationName { get; }
         bool IsInstalled { get; }

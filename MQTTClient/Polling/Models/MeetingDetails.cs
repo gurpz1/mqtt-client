@@ -1,17 +1,17 @@
-﻿﻿using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace MQTTClient.Meeting
+namespace MQTTClient.Polling.Models
 {
     public class MeetingDetails:IMeetingDetails
     {
-        private State _state;
-        public State State
+        private MeetingState _meetingState;
+        public MeetingState MeetingState
         {
-            get { return _state;}
+            get { return _meetingState;}
             set
             {
-                _state = value;
+                _meetingState = value;
                 OnPropertyChanged();
             } }
         

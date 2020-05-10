@@ -1,17 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Win32;
+using MQTTClient.Config;
+using MQTTClient.Polling.Models;
 
-namespace MQTTClient.Meeting
+namespace MQTTClient.Polling
 {
-    public class Webex:MeetingPoller
+    public class Webex:MeetingApplicationPoller
     {
 
-        public Webex(ILogger<Webex> logger, int pollingFrequency = 1500) : 
-            base(logger, "WebEx", pollingFrequency, State.FREE)
+        public Webex(ILogger<Webex> logger,
+            IOptions<Dictionary<string,MeetingApplicationSettings>> configuration) : 
+            base(logger, "WebEx", configuration.Value["WebEx"].PollingFrequencySeconds, MeetingState.FREE)
         {
         }
 
@@ -21,12 +24,12 @@ namespace MQTTClient.Meeting
             if (pnames.Length > 1)
             {
                 _logger.LogDebug("In a meeting.");
-                MeetingDetails.State =  State.IN_PROGRESS;
+                MeetingDetails.MeetingState =  MeetingState.BUSY;
             }
             else
             {
                 _logger.LogDebug("Not in a meeting");
-                MeetingDetails.State = State.FREE;   
+                MeetingDetails.MeetingState = MeetingState.FREE;   
             }
         }
 
@@ -38,8 +41,9 @@ namespace MQTTClient.Meeting
                 RegistryKey path = Registry.CurrentUser.OpenSubKey(registryPath);
                 var value = path.GetValue("IsRecordAudio");
             }
-            catch
+            catch (Exception e)
             {
+                _logger.LogWarning(e.Message);
                 return false;
             }
 

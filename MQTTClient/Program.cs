@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MQTTClient.Meeting;
+using Microsoft.Extensions.Options;
+using MQTTClient.Config;
 using MQTTClient.Mqtt;
+using MQTTClient.Polling;
 using Serilog;
 
 namespace MQTTClient
@@ -24,9 +27,10 @@ namespace MQTTClient
             // Launch
             using (var services = serviceCollection.BuildServiceProvider())
             {
-                var logger = services.GetService<ILogger<Program>>();
+                var logger = services.GetRequiredService<ILogger<Program>>();
                 logger.LogDebug("Application Launching...");
 
+                
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
@@ -43,34 +47,38 @@ namespace MQTTClient
         /// <param name="args"></param>
         private static void configureServices(IServiceCollection serviceCollection, string[] args)
         {
+            // Read configuration
             IConfiguration configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("Config/appsettings.json", optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables(prefix:"MQTTClient_")
                 .AddCommandLine(args)
                 .Build();
-            
+
+            // Intialise Logging
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
-            
-            
-            // Initialise services
-            serviceCollection.AddSingleton(configuration);
-            serviceCollection.Configure<ConnectionSettings>(configuration.GetSection("ConnectionSettings"));
-            serviceCollection.AddScoped<MQTTClientContext>();
-            
-            // Initialise MQTT Stuff
-            serviceCollection.AddScoped<PublisherFacade>();
-            
-            // Initialise Meeting Applications
-            serviceCollection.AddSingleton<Webex>();
-            serviceCollection.AddSingleton<SkypeForBusiness>();
-            
             
             serviceCollection.AddLogging(builder =>
             {
                 builder.AddSerilog(dispose: true);
             });
+            
+            // Initialise Config
+            serviceCollection.AddSingleton(configuration);
+            serviceCollection.Configure<ConnectionSettings>(configuration.GetSection("ConnectionSettings"));
+            serviceCollection.Configure<Dictionary<string, MeetingApplicationSettings>>(
+                configuration.GetSection("MeetingApplicationSettings"));
+
+            // Initialise MQTT Stuff
+            serviceCollection.AddScoped<ManagedClientFacade>();
+            
+            // Initialise Meeting Applications
+            serviceCollection.AddSingleton<Webex>();
+            serviceCollection.AddSingleton<Lync>();
+            
+            // Initialise main form
+            serviceCollection.AddScoped<MQTTClientContext>();
         }
     }
 }
