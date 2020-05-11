@@ -9,7 +9,7 @@ namespace MQTTClient.Polling
     {
         #region Public Properties
 
-        public IApplicationMetadata ApplicationMetadata { get; }
+        public IApplication Application { get; }
         public int PollingFrequency{get;} 
         #endregion
 
@@ -33,21 +33,21 @@ namespace MQTTClient.Polling
             _cancellationTokenSource = new CancellationTokenSource();
             _token = _cancellationTokenSource.Token;
             
-            ApplicationMetadata = new ApplicationMetadata(applicationName, IsInstalled());
+            Application = new Application(applicationName, IsInstalled());
             PollingFrequency = pollingFrequency*1000;
 
-            if (!ApplicationMetadata.IsInstalled)
+            if (!Application.IsInstalled)
             {
-                _logger.LogError($"{ApplicationMetadata.ApplicationName} is not installed. Halting poller.");
+                _logger.LogError($"{Application.ApplicationName} is not installed. Halting poller.");
                 return;
             }
 
-            _logger.LogInformation($"Starting to poll {ApplicationMetadata.ApplicationName} every {pollingFrequency}s");
+            _logger.LogInformation($"Starting to poll {Application.ApplicationName} every {pollingFrequency}s");
         }
 
         public void StartPolling()
         {
-            if (ApplicationMetadata.IsInstalled)
+            if (Application.IsInstalled)
             {
                 _task = Task.Run(async () =>
                 {
@@ -55,7 +55,7 @@ namespace MQTTClient.Polling
                     {
                         if (!CheckIsRunning())
                         {
-                            _logger.LogDebug($"{ApplicationMetadata.ApplicationName} is not running. Will continue to poll");
+                            _logger.LogDebug($"{Application.ApplicationName} is not running. Will continue to poll");
                         }
                         else
                         {
@@ -77,9 +77,9 @@ namespace MQTTClient.Polling
         protected abstract bool IsInstalled();
         protected abstract bool CheckIsRunning();
 
-        public void Dispose()
+        public virtual void Dispose()
         {
-            _logger.LogInformation($"Stopping {ApplicationMetadata.ApplicationName} polling");
+            _logger.LogInformation($"Stopping {Application.ApplicationName} polling");
             StopPolling();
         }
     }

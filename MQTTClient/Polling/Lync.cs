@@ -15,7 +15,7 @@ namespace MQTTClient.Polling
         
         public Lync(ILogger<Lync> logger,
             IOptions<Dictionary<string,MeetingApplicationSettings>> configuration)
-            : base(logger, "Lync", configuration.Value["Lync"].PollingFrequencySeconds, MeetingState.FREE)
+            : base(logger, "Lync", configuration.Value["Lync"].PollingFrequencySeconds, Availability.FREE)
         {
         }
 
@@ -28,9 +28,9 @@ namespace MQTTClient.Polling
                 _logger.LogDebug($"User is {activity}");
                 if(activity.ToString() == "In a call")
                 {
-                    MeetingDetails.MeetingState = MeetingState.BUSY;
+                    MeetingDetails.Availability = Availability.BUSY;
                 }
-                MeetingDetails.MeetingState = MeetingState.FREE;
+                MeetingDetails.Availability = Availability.FREE;
             }
         }
 

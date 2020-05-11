@@ -1,6 +1,6 @@
 ﻿namespace MQTTClient.Polling.Models
 {
-    public interface IApplicationMetadata
+    public interface IApplication
     {
         string ApplicationName { get; }
         bool IsInstalled { get; }

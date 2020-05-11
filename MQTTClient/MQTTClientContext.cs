@@ -14,6 +14,7 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
+using Application = System.Windows.Forms.Application;
 
 namespace MQTTClient
 {
@@ -61,62 +62,51 @@ namespace MQTTClient
             AddMeetingStatus(_lync);
             
             // Start the connection and polling
-            _mqttMangedClientFacade.MqttClient.StartAsync(_mqttMangedClientFacade.ClientOptions);
+            _mqttMangedClientFacade.Start();
             _webex.StartPolling();
             _lync.StartPolling();
         }
         #region Meeting Status Stuff
         private void AddMeetingStatus(IMeetingApplicationPoller meetingApplicationPoller)
         {
-            _logger.LogDebug($"Adding {meetingApplicationPoller.ApplicationMetadata.ApplicationName} status to menu item");
+            _logger.LogDebug($"Adding {meetingApplicationPoller.Application.ApplicationName} status to menu item");
             var statusItem = new ToolStripMenuItem();
             statusItem.Enabled = false;
-            statusItem.Name = $"{meetingApplicationPoller.ApplicationMetadata.ApplicationName}_satus_item";
-            statusItem.Text = GetMeetingApplicationStatusText(meetingApplicationPoller.ApplicationMetadata, meetingApplicationPoller.MeetingDetails);
+            statusItem.Name = $"{meetingApplicationPoller.Application.ApplicationName}_satus_item";
+            statusItem.Text = GetMeetingApplicationStatusText(meetingApplicationPoller.Application, meetingApplicationPoller.MeetingDetails);
             
             // Subscribe to change events 
             meetingApplicationPoller.MeetingDetails.PropertyChanged += (receivedMeetingDetails, args) =>
             {
                 var meetingDetails = (MeetingDetails) receivedMeetingDetails;
-                _logger.LogDebug($"Status Changed to {meetingDetails.MeetingState.ToString()}");
-                statusItem.Text = GetMeetingApplicationStatusText(meetingApplicationPoller.ApplicationMetadata, meetingDetails);
-                SendMqttMessage(meetingApplicationPoller.ApplicationMetadata, meetingDetails);
+                var application = meetingApplicationPoller.Application;
+                statusItem.Text = GetMeetingApplicationStatusText(application, meetingDetails);
+                
+                var message = MqttMessage.GenerateMqttMessageForMeetingStatus(
+                    _mqttMangedClientFacade.ConnectionSettings.ClientID, application, meetingDetails);
+                _mqttMangedClientFacade.Publish(message);
             };
 
             _trayIcon.ContextMenuStrip.Items.Insert(1,statusItem);
         }
 
-        private void SendMqttMessage(IApplicationMetadata applicationMetadata, MeetingDetails meetingDetails)
+        private string GetMeetingApplicationStatusText(IApplication application, IMeetingDetails meetingDetails)
         {
-            var payload = $"{meetingDetails.MeetingState}";
-            var message = new MqttApplicationMessage()
+            if (!application.IsInstalled)
             {
-                Topic = new MeetingMessage(applicationMetadata, meetingDetails,
-                    _mqttMangedClientFacade.ClientOptions.ClientOptions.ClientId).Topic,
-                Payload = Encoding.UTF8.GetBytes(payload),
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
-            };
-            _logger.LogDebug(payload);
-            _mqttMangedClientFacade.MqttClient.PublishAsync(message);
-        }
-
-        private string GetMeetingApplicationStatusText(IApplicationMetadata applicationMetadata, IMeetingDetails meetingDetails)
-        {
-            if (!applicationMetadata.IsInstalled)
-            {
-                return $"{applicationMetadata.ApplicationName} not installed";
+                return $"{application.ApplicationName} not installed";
             }
-            var availableMessage = $"{applicationMetadata.ApplicationName} available";
-            var busyMessage = $"{applicationMetadata.ApplicationName} in meeting";
-            switch (meetingDetails.MeetingState)
+            var availableMessage = $"{application.ApplicationName} available";
+            var busyMessage = $"{application.ApplicationName} in meeting";
+            switch (meetingDetails.Availability)
             {
-                case (MeetingState.FREE):
+                case (Availability.FREE):
                     return availableMessage;
-                case (MeetingState.BUSY):
+                case (Availability.BUSY):
                     return busyMessage;
             }
 
-            return $"{applicationMetadata.ApplicationName} unknown state";
+            return $"{application.ApplicationName} unknown state";
         }
         #endregion
         private void AddConnectionStatus(IManagedClientFacade mqttClientFacade)
@@ -126,19 +116,9 @@ namespace MQTTClient
             statusItem.Enabled = false;
             statusItem.Text = "Unknown Status";
             statusItem.Name = "connection_satus_item";
-
-            _logger.LogDebug("Subscribing MQTT connection status events");
-            mqttClientFacade.MqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x =>
-            {
-                _logger.LogInformation($"Connected to {mqttClientFacade.BrokerUrl} as {mqttClientFacade.ClientOptions.ClientOptions.ClientId} with {mqttClientFacade.MqttClient.Options.ClientOptions.Credentials.Username}");
-                statusItem.Text = $"Connected to {mqttClientFacade.BrokerUrl}";
-            });
-
-            mqttClientFacade.MqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x =>
-            {
-                _logger.LogInformation($"Disconnected from {mqttClientFacade.BrokerUrl}");
-                statusItem.Text = $"Disconnected from {mqttClientFacade.BrokerUrl}";
-            });
+            
+            mqttClientFacade.OnConnected(() => statusItem.Text = $"Connected to {mqttClientFacade.ConnectionSettings.BrokerURL}");
+            mqttClientFacade.OnDisconnected(() =>statusItem.Text = $"Disconnected from {mqttClientFacade.ConnectionSettings.BrokerURL}");
             
             _trayIcon.ContextMenuStrip.Items.Add(statusItem);
         }
@@ -147,7 +127,7 @@ namespace MQTTClient
         {
             _trayIcon.BalloonTipIcon= ToolTipIcon.Info;
 
-            _trayIcon.BalloonTipText = $"Connecting to {_mqttMangedClientFacade.BrokerUrl}";
+            _trayIcon.BalloonTipText = $"Connecting to {_mqttMangedClientFacade.ConnectionSettings.BrokerURL}";
             _trayIcon.BalloonTipTitle = "Home Status Notifier";
             _trayIcon.ShowBalloonTip(1500);
         }
@@ -166,8 +146,6 @@ namespace MQTTClient
         private void exitItem_Click(object sender, EventArgs e)
         {
             _logger.LogDebug("Exit button clicked");
-            _webex.Dispose();
-            _lync.Dispose();
             _trayIcon.Visible = false;
             Application.Exit();
         }

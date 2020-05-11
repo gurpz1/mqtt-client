@@ -1,11 +1,11 @@
 ﻿namespace MQTTClient.Polling.Models
 {
-    public class ApplicationMetadata:IApplicationMetadata
+    public class Application:IApplication
     {
         public string ApplicationName { get; }
         public bool IsInstalled { get; }
 
-        public ApplicationMetadata(string applicationName, bool isInstalled)
+        public Application(string applicationName, bool isInstalled)
         {
             ApplicationName = applicationName;
             IsInstalled = isInstalled;

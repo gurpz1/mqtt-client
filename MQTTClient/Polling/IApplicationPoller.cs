@@ -5,7 +5,7 @@ namespace MQTTClient.Polling
 {
     public interface IApplicationPoller:IDisposable
     {
-        IApplicationMetadata ApplicationMetadata { get; }
+        IApplication Application { get; }
         int PollingFrequency { get; }
         void StartPolling();
         void StopPolling();

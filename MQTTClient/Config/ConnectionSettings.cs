@@ -2,7 +2,7 @@
 
 namespace MQTTClient.Config
 {
-    public class ConnectionSettings:IConnectionSettings
+    public class ConnectionSettings
     {
         public string ClientID { get; set; } = Environment.MachineName;
         public string BrokerURL { get; set; }

@@ -5,13 +5,13 @@ namespace MQTTClient.Polling.Models
 {
     public class MeetingDetails:IMeetingDetails
     {
-        private MeetingState _meetingState;
-        public MeetingState MeetingState
+        private Availability _availability;
+        public Availability Availability
         {
-            get { return _meetingState;}
+            get { return _availability;}
             set
             {
-                _meetingState = value;
+                _availability = value;
                 OnPropertyChanged();
             } }
         

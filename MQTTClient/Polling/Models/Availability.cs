@@ -1,6 +1,6 @@
 ﻿namespace MQTTClient.Polling.Models
 {
-    public enum MeetingState
+    public enum Availability
     {
         BUSY,
         FREE

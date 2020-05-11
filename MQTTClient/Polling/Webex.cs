@@ -14,7 +14,7 @@ namespace MQTTClient.Polling
 
         public Webex(ILogger<Webex> logger,
             IOptions<Dictionary<string,MeetingApplicationSettings>> configuration) : 
-            base(logger, "WebEx", configuration.Value["WebEx"].PollingFrequencySeconds, MeetingState.FREE)
+            base(logger, "WebEx", configuration.Value["WebEx"].PollingFrequencySeconds, Availability.FREE)
         {
         }
 
@@ -24,12 +24,12 @@ namespace MQTTClient.Polling
             if (pnames.Length > 1)
             {
                 _logger.LogDebug("In a meeting.");
-                MeetingDetails.MeetingState =  MeetingState.BUSY;
+                MeetingDetails.Availability =  Availability.BUSY;
             }
             else
             {
                 _logger.LogDebug("Not in a meeting");
-                MeetingDetails.MeetingState = MeetingState.FREE;   
+                MeetingDetails.Availability = Availability.FREE;   
             }
         }
 
