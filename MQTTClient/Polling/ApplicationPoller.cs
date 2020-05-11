@@ -49,6 +49,7 @@ namespace MQTTClient.Polling
         {
             if (Application.IsInstalled)
             {
+                _logger.LogInformation($"Starting to poll {Application.ApplicationName}");
                 _task = Task.Run(async () =>
                 {
                     while (!_token.IsCancellationRequested)
@@ -76,6 +77,8 @@ namespace MQTTClient.Polling
         protected abstract void SetState();
         protected abstract bool IsInstalled();
         protected abstract bool CheckIsRunning();
+        
+        
 
         public virtual void Dispose()
         {

@@ -52,10 +52,15 @@ namespace MQTTClient.Polling
                     _logger.LogInformation($"Found {value}");
                     return true;
                 }
-                catch
+                catch (NullReferenceException)
                 {
-                    _logger.LogDebug($"{lyncVersion.Value} not found");
+                    // Entirely Expected
                 }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e.Message);
+                }
+                _logger.LogInformation($"{lyncVersion.Value} not found");
             }
             _logger.LogWarning("Unable to determine if Lync was installed. Assuming not");
             return false;

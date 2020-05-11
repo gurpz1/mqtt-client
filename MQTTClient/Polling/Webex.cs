@@ -40,14 +40,18 @@ namespace MQTTClient.Polling
             {
                 RegistryKey path = Registry.CurrentUser.OpenSubKey(registryPath);
                 var value = path.GetValue("IsRecordAudio");
+                return true;
+            }
+            catch (NullReferenceException)
+            {
+                // entirely expected if not found
             }
             catch (Exception e)
             {
-                _logger.LogWarning("Unable to determine if WebEx was installed. Assuming not");
-                return false;
+                _logger.LogWarning(e.Message);
             }
-
-            return true;
+            _logger.LogWarning($"Unable to determine if Webex was installed. Assuming not");
+            return false;
         }
 
         protected override bool CheckIsRunning()
