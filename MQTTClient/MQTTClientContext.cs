@@ -23,7 +23,7 @@ namespace MQTTClient
         private NotifyIcon _trayIcon;
         private ILogger _logger;
         
-        private IManagedClientFacade _mqttMangedClientFacade;
+        private IMqttClientFacade _mqttMangedClientFacade;
         
         #region Supported Meeting Apps
         private IMeetingApplicationPoller _webex;
@@ -32,7 +32,7 @@ namespace MQTTClient
         #endregion
 
         public MQTTClientContext(ILogger<MQTTClientContext> logger, 
-            ManagedClientFacade mqttClientFacade,
+            MqttClientFacade mqttClientFacade,
             Webex webex,
             Lync lync,
             Zoom zoom)
@@ -114,7 +114,7 @@ namespace MQTTClient
             return $"{application.ApplicationName} unknown state";
         }
         #endregion
-        private void AddConnectionStatus(IManagedClientFacade mqttClientFacade)
+        private void AddConnectionStatus(IMqttClientFacade mqttClientFacade)
         {
             _logger.LogDebug("Adding MQTT connection status menu item");
             var statusItem = new ToolStripMenuItem();

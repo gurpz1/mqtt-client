@@ -71,7 +71,7 @@ namespace MQTTClient
                 configuration.GetSection("MeetingApplicationSettings"));
 
             // Initialise MQTT Stuff
-            serviceCollection.AddScoped<ManagedClientFacade>();
+            serviceCollection.AddScoped<MqttClientFacade>();
             
             // Initialise Meeting Applications
             serviceCollection.AddSingleton<Webex>();

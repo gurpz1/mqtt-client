@@ -4,7 +4,7 @@ using MQTTnet.Extensions.ManagedClient;
 
 namespace MQTTClient.Mqtt
 {
-    public interface IManagedClientFacade: IDisposable
+    public interface IMqttClientFacade: IDisposable
     {
         public ConnectionSettings ConnectionSettings { get; }
         void Start();

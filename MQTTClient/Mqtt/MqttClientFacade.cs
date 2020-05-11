@@ -12,17 +12,17 @@ using MQTTnet.Protocol;
 
 namespace MQTTClient.Mqtt
 {
-    public class ManagedClientFacade: IManagedClientFacade
+    public class MqttClientFacade: IMqttClientFacade
     {
         public ConnectionSettings ConnectionSettings { get; }
-        private ILogger<ManagedClientFacade> _logger;
+        private ILogger<MqttClientFacade> _logger;
         private IManagedMqttClientOptions _clientOptions;
         private IManagedMqttClient _mqttClient;
 
         private MqttApplicationMessage _lwtMessage;
         
         
-        public ManagedClientFacade(ILogger<ManagedClientFacade> logger, IOptions<ConnectionSettings> connectionSettings)
+        public MqttClientFacade(ILogger<MqttClientFacade> logger, IOptions<ConnectionSettings> connectionSettings)
         {
             ConnectionSettings = connectionSettings.Value;
             _logger = logger;
