@@ -1,49 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
+using ApplicationPoller;
+using ApplicationPoller.Meeting;
+using ApplicationPoller.Meeting.Apps;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using MQTTClient.Config;
 using MQTTClient.Mqtt;
-using MQTTClient.Polling;
-using MQTTClient.Polling.Models;
-using MQTTnet;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Extensions.ManagedClient;
-using MQTTnet.Protocol;
 using Application = System.Windows.Forms.Application;
 
 namespace MQTTClient
 {
     public class MQTTClientContext: ApplicationContext
     {
-        private NotifyIcon _trayIcon;
-        private ILogger _logger;
+        private readonly NotifyIcon _trayIcon;
+        private readonly ILogger _logger;
         
-        private IMqttClientFacade _mqttMangedClientFacade;
-        
-        #region Supported Meeting Apps
-        private IMeetingApplicationPoller _webex;
-        private IMeetingApplicationPoller _lync;
-        private IMeetingApplicationPoller _zoom;
-        #endregion
+        private readonly IMqttClientFacade _mqttClientFacade;
 
         public MQTTClientContext(ILogger<MQTTClientContext> logger, 
-            MqttClientFacade mqttClientFacade,
-            Webex webex,
-            Lync lync,
-            Zoom zoom)
+            IMqttClientFacade mqttClientFacade,
+            IEnumerable<IMeetingApplicationPoller> meetingApplicationPollers)
         {
             _logger = logger;
-            _mqttMangedClientFacade = mqttClientFacade;
-
-            // Meeting apps
-            _webex = webex;
-            _lync = lync;
-            _zoom = zoom;
+            _mqttClientFacade = mqttClientFacade;
 
             var contextMenu = new ContextMenuStrip();
 
@@ -56,20 +37,19 @@ namespace MQTTClient
             };
 
             // Add minimum required buttons
-            AddConnectionStatus(_mqttMangedClientFacade);
+            AddConnectionStatus(_mqttClientFacade);
             AddExitButton();
             ShowLaunchBaloon();
-
-            // Add stuff you want to monitor
-            AddMeetingStatus(_webex);
-            AddMeetingStatus(_lync);
-            AddMeetingStatus(_zoom);
             
-            // Start the connection and polling
-            _mqttMangedClientFacade.Start();
-            _webex.StartPolling();
-            _lync.StartPolling();
-            _zoom.StartPolling();
+            // Start MQTT client
+            _mqttClientFacade.Start();
+            
+            // Register all meeting pollers
+            foreach (IMeetingApplicationPoller meetingApplicationPoller in meetingApplicationPollers)
+            {
+                AddMeetingStatus(meetingApplicationPoller); 
+                meetingApplicationPoller.StartPolling();
+            }
         }
         #region Meeting Status Stuff
         private void AddMeetingStatus(IMeetingApplicationPoller meetingApplicationPoller)
@@ -88,8 +68,8 @@ namespace MQTTClient
                 statusItem.Text = GetMeetingApplicationStatusText(application, meetingDetails);
                 
                 var message = MqttMessage.GenerateForMeetingStatus(
-                    _mqttMangedClientFacade.ConnectionSettings.ClientID, application, meetingDetails);
-                _mqttMangedClientFacade.Publish(message);
+                    _mqttClientFacade.ConnectionSettings.ClientID, application, meetingDetails);
+                _mqttClientFacade.Publish(message);
             };
 
             _trayIcon.ContextMenuStrip.Items.Insert(1,statusItem);
@@ -132,7 +112,7 @@ namespace MQTTClient
         {
             _trayIcon.BalloonTipIcon= ToolTipIcon.Info;
 
-            _trayIcon.BalloonTipText = $"Connecting to {_mqttMangedClientFacade.ConnectionSettings.BrokerURL}";
+            _trayIcon.BalloonTipText = $"Connecting to {_mqttClientFacade.ConnectionSettings.BrokerURL}";
             _trayIcon.BalloonTipTitle = "Home Status Notifier";
             _trayIcon.ShowBalloonTip(1500);
         }

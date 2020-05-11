@@ -1,4 +1,5 @@
-﻿using MQTTClient.Polling.Models;
+﻿using ApplicationPoller;
+using ApplicationPoller.Meeting;
 
 namespace MQTTClient.Mqtt
 {

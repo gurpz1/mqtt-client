@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using ApplicationPoller.Meeting;
+using ApplicationPoller.Meeting.Apps;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTClient.Config;
 using MQTTClient.Mqtt;
-using MQTTClient.Polling;
 using Serilog;
 
 namespace MQTTClient
@@ -71,15 +72,25 @@ namespace MQTTClient
                 configuration.GetSection("MeetingApplicationSettings"));
 
             // Initialise MQTT Stuff
-            serviceCollection.AddScoped<MqttClientFacade>();
+            serviceCollection.AddSingleton<IMqttClientFacade, MqttClientFacade>();
             
-            // Initialise Meeting Applications
-            serviceCollection.AddSingleton<Webex>();
-            serviceCollection.AddSingleton<Lync>();
-            serviceCollection.AddSingleton<Zoom>();
-            
+            // Initialise Meeting Apps
+            serviceCollection.AddSingleton<IMeetingApplicationPoller, Lync>(services =>
+                new Lync(services.GetRequiredService<ILogger<Lync>>(), GetSettingsForApplication(services, "Lync")));
+            serviceCollection.AddSingleton<IMeetingApplicationPoller, Webex>(services =>
+                new Webex(services.GetRequiredService<ILogger<Webex>>(), GetSettingsForApplication(services, "Webex")));
+            serviceCollection.AddSingleton<IMeetingApplicationPoller, Zoom>(services =>
+                new Zoom(services.GetRequiredService<ILogger<Zoom>>(), GetSettingsForApplication(services, "Zoom")));
+
             // Initialise main form
             serviceCollection.AddScoped<MQTTClientContext>();
+        }
+        
+
+        private static MeetingApplicationSettings GetSettingsForApplication(IServiceProvider serviceProvider, string applicationName)
+        {
+            var settings = serviceProvider.GetRequiredService<IOptions<Dictionary<string, MeetingApplicationSettings>>>();
+            return settings.Value.GetValueOrDefault(applicationName,new MeetingApplicationSettings());
         }
     }
 }

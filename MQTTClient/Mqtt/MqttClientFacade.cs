@@ -42,6 +42,7 @@ namespace MQTTClient.Mqtt
                     .WithTcpServer(ConnectionSettings.BrokerURL)
                     .WithWillMessage(_lwtMessage)
                     .WithKeepAlivePeriod(TimeSpan.FromSeconds(10))
+                    .WithCommunicationTimeout(TimeSpan.FromMinutes(5))
                     .WithCredentials(ConnectionSettings.Username, ConnectionSettings.Password)
                     .WithCleanSession()
                     .Build()

@@ -7,7 +7,9 @@ namespace MQTTClient.Mqtt
     public interface IMqttClientFacade: IDisposable
     {
         public ConnectionSettings ConnectionSettings { get; }
+        
         void Start();
+
         void Stop();
 
         void Publish(MqttMessage message);

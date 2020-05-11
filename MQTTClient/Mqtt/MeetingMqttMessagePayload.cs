@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using MQTTClient.Polling.Models;
+using ApplicationPoller.Meeting;
 
 namespace MQTTClient.Mqtt
 {
