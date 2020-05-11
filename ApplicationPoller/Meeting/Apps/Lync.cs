@@ -27,7 +27,10 @@ namespace ApplicationPoller.Meeting.Apps
                 {
                     MeetingDetails.Availability = Availability.BUSY;
                 }
-                MeetingDetails.Availability = Availability.FREE;
+                else
+                {
+                    MeetingDetails.Availability = Availability.FREE;   
+                }
             }
         }
 
