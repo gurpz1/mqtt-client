@@ -18,7 +18,7 @@ namespace MQTTClient.Mqtt
             return $"{Topic}: {Payload}";
         }
 
-        public static MqttMessage GenerateMqttMessageForMeetingStatus(string clientId, IApplication application,
+        public static MqttMessage GenerateForMeetingStatus(string clientId, IApplication application,
             IMeetingDetails meetingDetails)
         {
             var topic = $"stat/{clientId}/meeting/{application.ApplicationName.ToLower()}";

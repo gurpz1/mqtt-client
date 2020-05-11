@@ -87,7 +87,7 @@ namespace MQTTClient
                 var application = meetingApplicationPoller.Application;
                 statusItem.Text = GetMeetingApplicationStatusText(application, meetingDetails);
                 
-                var message = MqttMessage.GenerateMqttMessageForMeetingStatus(
+                var message = MqttMessage.GenerateForMeetingStatus(
                     _mqttMangedClientFacade.ConnectionSettings.ClientID, application, meetingDetails);
                 _mqttMangedClientFacade.Publish(message);
             };
