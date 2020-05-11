@@ -23,7 +23,7 @@ namespace MQTTClient
         {
             // Setup DI
             IServiceCollection serviceCollection = new ServiceCollection();
-            configureServices(serviceCollection, args);
+            ConfigureServices(serviceCollection, args);
             
             // Launch
             using (var services = serviceCollection.BuildServiceProvider())
@@ -46,7 +46,7 @@ namespace MQTTClient
         /// </summary>
         /// <param name="serviceCollection"></param>
         /// <param name="args"></param>
-        private static void configureServices(IServiceCollection serviceCollection, string[] args)
+        private static void ConfigureServices(IServiceCollection serviceCollection, string[] args)
         {
             // Read configuration
             IConfiguration configuration = new ConfigurationBuilder()
