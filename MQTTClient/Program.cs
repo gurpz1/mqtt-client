@@ -76,6 +76,7 @@ namespace MQTTClient
             // Initialise Meeting Applications
             serviceCollection.AddSingleton<Webex>();
             serviceCollection.AddSingleton<Lync>();
+            serviceCollection.AddSingleton<Zoom>();
             
             // Initialise main form
             serviceCollection.AddScoped<MQTTClientContext>();

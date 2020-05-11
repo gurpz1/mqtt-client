@@ -38,7 +38,7 @@ namespace MQTTClient.Polling
 
             if (!Application.IsInstalled)
             {
-                _logger.LogError($"{Application.ApplicationName} is not installed. Halting poller.");
+                _logger.LogWarning($"{Application.ApplicationName} is not installed. Halting poller.");
                 return;
             }
 

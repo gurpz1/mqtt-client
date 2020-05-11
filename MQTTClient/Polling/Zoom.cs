@@ -9,19 +9,19 @@ using MQTTClient.Polling.Models;
 
 namespace MQTTClient.Polling
 {
-    public class Webex:MeetingApplicationPoller
+    public class Zoom:MeetingApplicationPoller
     {
 
-        public Webex(ILogger<Webex> logger,
+        public Zoom(ILogger<Zoom> logger,
             IOptions<Dictionary<string,MeetingApplicationSettings>> configuration) : 
-            base(logger, "WebEx", configuration.Value["WebEx"].PollingFrequencySeconds, Availability.FREE)
+            base(logger, "Zoom", configuration.Value["Zoom"].PollingFrequencySeconds, Availability.FREE)
         {
         }
 
         protected override void SetState()
         {
-            Process[] pnames = Process.GetProcessesByName("webexmta");
-            if (pnames.Length > 1)
+            Process[] pnames = Process.GetProcessesByName("CptHost");
+            if (pnames.Length > 0)
             {
                 _logger.LogDebug("In a meeting.");
                 MeetingDetails.Availability =  Availability.BUSY;
@@ -35,15 +35,16 @@ namespace MQTTClient.Polling
 
         protected override bool IsInstalled()
         {
-            string registryPath = @"Software\WebEx\Config";
+            string registryPath = @"Software\Zoom\MSI";
             try
             {
-                RegistryKey path = Registry.CurrentUser.OpenSubKey(registryPath);
-                var value = path.GetValue("IsRecordAudio");
+                RegistryKey path = Registry.LocalMachine.OpenSubKey(registryPath);
+                var value = path.GetValue("Home");
             }
             catch (Exception e)
             {
-                _logger.LogWarning("Unable to determine if WebEx was installed. Assuming not");
+                _logger.LogDebug(e.Message);
+                _logger.LogWarning("Unable to determine if Zoom was installed. Assuming not");
                 return false;
             }
 
@@ -52,7 +53,7 @@ namespace MQTTClient.Polling
 
         protected override bool CheckIsRunning()
         {
-            Process[] pnames = Process.GetProcessesByName("webexmta");
+            Process[] pnames = Process.GetProcessesByName("Zoom");
             return pnames.Length > 0;
         }
     }

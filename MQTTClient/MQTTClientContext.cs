@@ -28,12 +28,14 @@ namespace MQTTClient
         #region Supported Meeting Apps
         private IMeetingApplicationPoller _webex;
         private IMeetingApplicationPoller _lync;
+        private IMeetingApplicationPoller _zoom;
         #endregion
 
         public MQTTClientContext(ILogger<MQTTClientContext> logger, 
             ManagedClientFacade mqttClientFacade,
             Webex webex,
-            Lync lync)
+            Lync lync,
+            Zoom zoom)
         {
             _logger = logger;
             _mqttMangedClientFacade = mqttClientFacade;
@@ -41,6 +43,7 @@ namespace MQTTClient
             // Meeting apps
             _webex = webex;
             _lync = lync;
+            _zoom = zoom;
 
             var contextMenu = new ContextMenuStrip();
 
@@ -60,11 +63,13 @@ namespace MQTTClient
             // Add stuff you want to monitor
             AddMeetingStatus(_webex);
             AddMeetingStatus(_lync);
+            AddMeetingStatus(_zoom);
             
             // Start the connection and polling
             _mqttMangedClientFacade.Start();
             _webex.StartPolling();
             _lync.StartPolling();
+            _zoom.StartPolling();
         }
         #region Meeting Status Stuff
         private void AddMeetingStatus(IMeetingApplicationPoller meetingApplicationPoller)
