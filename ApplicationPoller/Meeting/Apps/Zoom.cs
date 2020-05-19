@@ -47,12 +47,17 @@ namespace ApplicationPoller.Meeting.Apps
             }
 
             // Then search registry
-            string registryPath = @"Software\Zoom\MSI";
+            string registryPath = @"SOFTWARE\Policies\Zoom\Zoom Meetings\General";
             try
             {
                 _logger.LogInformation("Checking if installed via registry");
-                RegistryKey path = Registry.LocalMachine.OpenSubKey(registryPath);
-                var value = path.GetValue("Home");
+                using(var key = Registry.LocalMachine.OpenSubKey(registryPath))
+                {
+                    if (key == null)
+                    {
+                        return false;
+                    }
+                }
                 return true;
             }
             catch (NullReferenceException)
