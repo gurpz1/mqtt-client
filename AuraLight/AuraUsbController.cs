@@ -29,6 +29,7 @@ namespace AuraLight
             _settings = settings.Value;
             _auraDevice = GetAuraDevice(_settings.DeviceIndex);
             AuraDeviceInfo = GetDeviceInfo(_auraDevice);
+            SendInitMessage();
         }
         
         /// <summary>
