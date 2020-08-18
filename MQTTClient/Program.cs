@@ -74,9 +74,11 @@ namespace MQTTClient
             serviceCollection.Configure<Dictionary<string, MeetingApplicationSettings>>(
                 configuration.GetSection("MeetingApplicationSettings"));
             
-            // Initialise MQTT Stuff
+            // Initialise MQTT command handlers
             serviceCollection.AddTransient<ICommandHandler, AuraCommandHandler>();
             serviceCollection.AddSingleton<ICommandTriager, CommandTriager>();
+            
+            // Initialise MQTT Client
             serviceCollection.AddSingleton<IMqttClientFacade, MqttClientFacade>();
             
             // Initialise Meeting Apps
