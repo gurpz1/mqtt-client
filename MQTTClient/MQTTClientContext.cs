@@ -8,6 +8,8 @@ using ApplicationPoller.Meeting;
 using ApplicationPoller.Meeting.Apps;
 using Microsoft.Extensions.Logging;
 using MQTTClient.Mqtt;
+using MQTTClient.Mqtt.Handlers;
+using MQTTClient.Mqtt.Messages;
 using Application = System.Windows.Forms.Application;
 
 namespace MQTTClient
@@ -21,7 +23,8 @@ namespace MQTTClient
 
         public MQTTClientContext(ILogger<MQTTClientContext> logger, 
             IMqttClientFacade mqttClientFacade,
-            IEnumerable<IMeetingApplicationPoller> meetingApplicationPollers)
+            IEnumerable<IMeetingApplicationPoller> meetingApplicationPollers,
+            ICommandTriager commandTriager)
         {
             _logger = logger;
             _mqttClientFacade = mqttClientFacade;
@@ -42,6 +45,7 @@ namespace MQTTClient
             ShowLaunchBaloon();
             
             // Start MQTT client
+            _mqttClientFacade.OnMessage(commandTriager.BaseTopic, commandTriager.OnReceive);
             _mqttClientFacade.Start();
             
             // Register all meeting pollers
@@ -67,7 +71,7 @@ namespace MQTTClient
                 var application = meetingApplicationPoller.Application;
                 statusItem.Text = GetMeetingApplicationStatusText(application, meetingDetails);
                 
-                var message = MqttMessage.GenerateForMeetingStatus(
+                var message = new MeetingStatusMessage(
                     _mqttClientFacade.ConnectionSettings.ClientID, application, meetingDetails);
                 _mqttClientFacade.Publish(message);
             };

@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using ApplicationPoller.Meeting;
 using ApplicationPoller.Meeting.Apps;
+using AuraLight.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTClient.Config;
 using MQTTClient.Mqtt;
+using MQTTClient.Mqtt.Handlers;
+using MQTTClient.Mqtt.Messages;
 using Serilog;
 
 namespace MQTTClient
@@ -72,6 +75,8 @@ namespace MQTTClient
                 configuration.GetSection("MeetingApplicationSettings"));
             
             // Initialise MQTT Stuff
+            serviceCollection.AddTransient<ICommandHandler, AuraCommandHandler>();
+            serviceCollection.AddSingleton<ICommandTriager, CommandTriager>();
             serviceCollection.AddSingleton<IMqttClientFacade, MqttClientFacade>();
             
             // Initialise Meeting Apps
@@ -81,7 +86,7 @@ namespace MQTTClient
                 new Webex(services.GetRequiredService<ILogger<Webex>>(), GetSettingsForApplication(services, "Webex")));
             serviceCollection.AddSingleton<IMeetingApplicationPoller, Zoom>(services =>
                 new Zoom(services.GetRequiredService<ILogger<Zoom>>(), GetSettingsForApplication(services, "Zoom")));
-
+            
             // Initialise main form
             serviceCollection.AddScoped<MQTTClientContext>();
         }

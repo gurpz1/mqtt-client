@@ -4,14 +4,13 @@ using System.Timers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTClient.Config;
+using MQTTClient.Mqtt.Messages;
 using MQTTnet;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
-using Newtonsoft.Json;
 
 namespace MQTTClient.Mqtt
 {
@@ -110,13 +109,12 @@ namespace MQTTClient.Mqtt
 
         public void OnMessage(string topic, Action<MqttMessage> action)
         {
-            _logger.LogInformation($"Subscribing to {topic}.");
+            _logger.LogInformation($"Subscribing for messages on {topic}.");
             _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
-            
             _mqttClient.UseApplicationMessageReceivedHandler(e =>
             {
                 var rawMessage = e.ApplicationMessage;
-                var message = new MqttMessage(rawMessage.Topic, Encoding.UTF8.GetString(rawMessage.Payload));
+                var message = new BasicMessage(rawMessage.Topic, Encoding.UTF8.GetString(rawMessage.Payload));
                 _logger.LogDebug($"Received message {message.Topic}: {message.Payload}");
                 action(message);
             });
