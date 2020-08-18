@@ -15,7 +15,12 @@ namespace MQTTClient.Mqtt.Handlers
         private IList<LED> _led;
         
         public string CommandTopic { get; }
-
+        
+        /// <summary>
+        /// Handles commands for Aura
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="connectionSettings"></param>
         public AuraCommandHandler(ILogger<AuraCommandHandler> logger,
             IOptions<ConnectionSettings> connectionSettings)
         {
