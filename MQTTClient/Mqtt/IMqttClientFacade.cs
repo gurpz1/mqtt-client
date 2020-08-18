@@ -1,5 +1,6 @@
 ﻿using System;
 using MQTTClient.Config;
+using MQTTnet;
 using MQTTnet.Extensions.ManagedClient;
 
 namespace MQTTClient.Mqtt
@@ -17,6 +18,8 @@ namespace MQTTClient.Mqtt
         void OnConnected(Action action);
         
         void OnDisconnected(Action action);
+
+        void OnMessage(string topic, Action<MqttMessage> action);
 
     }
 }

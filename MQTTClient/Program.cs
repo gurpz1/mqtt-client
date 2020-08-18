@@ -70,7 +70,7 @@ namespace MQTTClient
             serviceCollection.Configure<ConnectionSettings>(configuration.GetSection("ConnectionSettings"));
             serviceCollection.Configure<Dictionary<string, MeetingApplicationSettings>>(
                 configuration.GetSection("MeetingApplicationSettings"));
-
+            
             // Initialise MQTT Stuff
             serviceCollection.AddSingleton<IMqttClientFacade, MqttClientFacade>();
             
