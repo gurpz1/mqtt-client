@@ -26,7 +26,7 @@ namespace MQTTClient.Mqtt.Handlers
         
         public void OnReceive(MqttMessage message)
         {
-            _logger.LogDebug($"Received: {message}");
+            _logger.LogDebug($"Received: {message.Payload}");
         }
     }
 }
