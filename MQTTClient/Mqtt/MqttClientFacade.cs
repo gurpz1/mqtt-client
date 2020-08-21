@@ -9,8 +9,10 @@ using MQTTnet;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
+using Polly;
 
 namespace MQTTClient.Mqtt
 {
@@ -66,13 +68,26 @@ namespace MQTTClient.Mqtt
                 .WithRetainFlag()
                 .WithAtLeastOnceQoS()
                 .Build();
-
-            _mqttClient.PublishAsync(onStartMessage);
+            
+            Policy
+                .HandleResult<MqttClientPublishResult>(r => r.ReasonCode == MqttClientPublishReasonCode.UnspecifiedError)
+                .WaitAndRetryForeverAsync(retryAttempt =>TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
+                .ExecuteAsync(() => _mqttClient.PublishAsync(onStartMessage));
         }
 
         public void Stop()
         {
-            _mqttClient.PublishAsync(_lwtMessage).Wait();
+            Policy
+                .HandleResult<MqttClientPublishResult>(r => r.ReasonCode == MqttClientPublishReasonCode.UnspecifiedError)
+                .WaitAndRetry(5, retryAttempt =>TimeSpan.FromSeconds(2),
+                    (exception, timespan) => _logger.LogWarning("Error sending stop message. Retrying..."))
+                .Execute(() =>
+                {
+                    var message = _mqttClient.PublishAsync(_lwtMessage);
+                    message.Wait();
+                    return message.Result;
+                });
+            
             _mqttClient.StopAsync().Wait();
             _logger.LogDebug("Stopped client");
             _mqttClient.Dispose();
@@ -85,8 +100,12 @@ namespace MQTTClient.Mqtt
             
             clientMessage.Payload = Encoding.UTF8.GetBytes(message.Payload);
             clientMessage.Topic = message.Topic;
-            
-            _mqttClient.PublishAsync(clientMessage);
+            Policy
+                .HandleResult<MqttClientPublishResult>(
+                    r => r.ReasonCode == MqttClientPublishReasonCode.UnspecifiedError)
+                .WaitAndRetryAsync(10, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                    (exception, timespan) => _logger.LogWarning($"Error sending message to {message.Topic}. Retrying..."))
+                .ExecuteAsync(() => _mqttClient.PublishAsync(clientMessage));
         }
 
         public void OnConnected(Action action)
