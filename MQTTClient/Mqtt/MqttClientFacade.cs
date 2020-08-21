@@ -110,7 +110,7 @@ namespace MQTTClient.Mqtt
         public void OnMessage(string topic, Action<MqttMessage> action)
         {
             _logger.LogInformation($"Subscribing for messages on {topic}.");
-            _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
+            _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build());
             _mqttClient.UseApplicationMessageReceivedHandler(e =>
             {
                 var rawMessage = e.ApplicationMessage;
