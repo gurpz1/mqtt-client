@@ -59,20 +59,8 @@ namespace MQTTClient.Mqtt
 
         public void Start()
         {
-            _logger.LogDebug("Starting up client");
+            _logger.LogDebug("Starting up client...");
             _mqttClient.StartAsync(_clientOptions).Wait();
-
-            var onStartMessage = new MqttApplicationMessageBuilder()
-                .WithPayload(Encoding.UTF8.GetBytes("Online"))
-                .WithTopic(_lwtMessage.Topic)
-                .WithRetainFlag()
-                .WithAtLeastOnceQoS()
-                .Build();
-            
-            Policy
-                .HandleResult<MqttClientPublishResult>(r => r.ReasonCode == MqttClientPublishReasonCode.UnspecifiedError)
-                .WaitAndRetryForeverAsync(retryAttempt =>TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
-                .ExecuteAsync(() => _mqttClient.PublishAsync(onStartMessage));
         }
 
         public void Stop()
@@ -80,7 +68,7 @@ namespace MQTTClient.Mqtt
             Policy
                 .HandleResult<MqttClientPublishResult>(r => r.ReasonCode == MqttClientPublishReasonCode.UnspecifiedError)
                 .WaitAndRetry(5, retryAttempt =>TimeSpan.FromSeconds(2),
-                    (exception, timespan) => _logger.LogWarning("Error sending stop message. Retrying..."))
+                    (exception, timespan) => _logger.LogWarning("Error sending offline message. Retrying..."))
                 .Execute(() =>
                 {
                     var message = _mqttClient.PublishAsync(_lwtMessage);
@@ -112,7 +100,23 @@ namespace MQTTClient.Mqtt
         {
             _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(e =>
             {
+                // Send online message when we are connected
+                var onStartMessage = new MqttApplicationMessageBuilder()
+                    .WithPayload(Encoding.UTF8.GetBytes("Online"))
+                    .WithTopic(_lwtMessage.Topic)
+                    .WithRetainFlag()
+                    .WithAtLeastOnceQoS()
+                    .Build();
+            
+                Policy
+                    .HandleResult<MqttClientPublishResult>(r => r.ReasonCode == MqttClientPublishReasonCode.UnspecifiedError)
+                    .WaitAndRetryForeverAsync(retryAttempt =>TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                        (exception, timespan) => _logger.LogWarning("Error sending onlline message. Retrying..."))
+                    .ExecuteAsync(() => _mqttClient.PublishAsync(onStartMessage));
+                
                 _logger.LogInformation($"Connected to {ConnectionSettings.BrokerURL} as {ConnectionSettings.ClientID} with {ConnectionSettings.Username}");
+                
+                // Then do whatever the user wants when connected
                 action();
             });
         }
