@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTClient.Config;
 using MQTTClient.Mqtt.Messages;
+using MQTTClient.Mqtt.Payloads;
 using MQTTnet;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -86,7 +87,7 @@ namespace MQTTClient.Mqtt
             MqttApplicationMessage clientMessage = new MqttApplicationMessage();
             clientMessage.QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
             
-            clientMessage.Payload = Encoding.UTF8.GetBytes(message.Payload);
+            clientMessage.Payload = Encoding.UTF8.GetBytes(message.Payload.ToStringJson());
             clientMessage.Topic = message.Topic;
             Policy
                 .HandleResult<MqttClientPublishResult>(
@@ -137,7 +138,7 @@ namespace MQTTClient.Mqtt
             _mqttClient.UseApplicationMessageReceivedHandler(e =>
             {
                 var rawMessage = e.ApplicationMessage;
-                var message = new BasicMessage(rawMessage.Topic, Encoding.UTF8.GetString(rawMessage.Payload));
+                var message = new StringMessage(rawMessage.Topic,  new StringPayload(Encoding.UTF8.GetString(rawMessage.Payload)));
                 _logger.LogDebug($"Received message {message.Topic}: {message.Payload}");
                 action(message);
             });

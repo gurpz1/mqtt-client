@@ -1,8 +1,10 @@
-﻿namespace MQTTClient.Mqtt.Messages
+﻿using MQTTClient.Mqtt.Payloads;
+
+namespace MQTTClient.Mqtt.Messages
 {
     public interface IMqttMessage
     {
         string Topic { get; }
-        string Payload { get; }
+        IPayload Payload { get; }
     }
 }

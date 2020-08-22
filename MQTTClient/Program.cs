@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Forms;
 using ApplicationPoller.Meeting;
 using ApplicationPoller.Meeting.Apps;
@@ -24,6 +25,9 @@ namespace MQTTClient
         [STAThread]
         static void Main(string[] args)
         {
+            // Random guid to identify application to prevent multiple instances running by accident
+            Mutex mutex = new Mutex(true, "475065FE-BA19-4850-B501-9B582D25D256");
+            
             // Setup DI
             IServiceCollection serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection, args);
@@ -34,13 +38,26 @@ namespace MQTTClient
                 var logger = services.GetRequiredService<ILogger<Program>>();
                 logger.LogDebug("Application Launching...");
 
-                
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-
-                var mqttContext = services.GetService<MQTTClientContext>(); 
-                Application.Run(mqttContext);   
+                
+                if (mutex.WaitOne(TimeSpan.FromSeconds(1), true))
+                {
+                    try
+                    {
+                        var mqttContext = services.GetService<MQTTClientContext>();
+                        Application.Run(mqttContext);
+                    }
+                    finally
+                    {
+                        mutex.ReleaseMutex();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("An instance of MQTTClient is already running.");
+                }
             }
         }
 

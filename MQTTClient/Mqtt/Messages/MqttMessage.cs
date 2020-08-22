@@ -1,17 +1,16 @@
 ﻿using MQTTClient.Mqtt.Messages;
+using MQTTClient.Mqtt.Payloads;
 
 namespace MQTTClient.Mqtt
 {
-    public abstract class MqttMessage:IMqttMessage
+    public abstract class MqttMessage :IMqttMessage
     {
         public string Topic { get; protected set; }
-        public string Payload { get; protected set; }
+        public IPayload Payload { get; protected set; }
 
-        protected MqttMessage()
-        {
-        }
-
-        public MqttMessage(string topic, string payload)
+        protected MqttMessage() {}
+        
+        public MqttMessage(string topic, IPayload payload)
         {
             Topic = topic;
             Payload = payload;
@@ -19,7 +18,7 @@ namespace MQTTClient.Mqtt
         
         public override string ToString()
         {
-            return $"{Topic}: {Payload}";
+            return $"{Topic}: {Payload.ToStringJson()}";
         }
     }
 }

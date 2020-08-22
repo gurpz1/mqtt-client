@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using ApplicationPoller;
 using ApplicationPoller.Meeting;
 using ApplicationPoller.Meeting.Apps;
+using AuraLight.Models;
 using Microsoft.Extensions.Logging;
 using MQTTClient.Mqtt;
 using MQTTClient.Mqtt.Handlers;
@@ -56,6 +57,10 @@ namespace MQTTClient
             }
         }
         #region Meeting Status Stuff
+        /// <summary>
+        /// Adds the meting statuses to the tray icon and subscribes to change in meeting status.
+        /// </summary>
+        /// <param name="meetingApplicationPoller"></param>
         private void AddMeetingStatus(IMeetingApplicationPoller meetingApplicationPoller)
         {
             _logger.LogDebug($"Adding {meetingApplicationPoller.Application.ApplicationName} status to menu item");
@@ -78,7 +83,12 @@ namespace MQTTClient
 
             _trayIcon.ContextMenuStrip.Items.Insert(1,statusItem);
         }
-
+        /// <summary>
+        /// Gets the text to put on the status tray icon
+        /// </summary>
+        /// <param name="application"></param>
+        /// <param name="meetingDetails"></param>
+        /// <returns></returns>
         private string GetMeetingApplicationStatusText(IApplication application, IMeetingDetails meetingDetails)
         {
             if (!application.IsInstalled)
@@ -98,6 +108,12 @@ namespace MQTTClient
             return $"{application.ApplicationName} unknown state";
         }
         #endregion
+        
+        #region Connection Stuff
+        /// <summary>
+        /// Adds connection status text
+        /// </summary>
+        /// <param name="mqttClientFacade"></param>
         private void AddConnectionStatus(IMqttClientFacade mqttClientFacade)
         {
             _logger.LogDebug("Adding MQTT connection status menu item");
@@ -111,6 +127,7 @@ namespace MQTTClient
             
             _trayIcon.ContextMenuStrip.Items.Add(statusItem);
         }
+        #endregion
 
         private void ShowLaunchBaloon()
         {
